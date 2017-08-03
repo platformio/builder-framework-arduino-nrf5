@@ -153,7 +153,7 @@ upload_args = []
 upload_protocol = env.subst("$UPLOAD_PROTOCOL")
 debug_tools = env.BoardConfig().get("debug.tools", {})
 if upload_protocol in debug_tools:
-    upload_args = ["-s", join(platform.get_package_dir("tool-openocd"))]
+    upload_args = ["-s", platform.get_package_dir("tool-openocd") or ""]
     upload_args += debug_tools.get(
         upload_protocol).get("server").get("arguments", [])
     upload_args += ["-c", "program {{$SOURCE}} verify reset; shutdown;"]
@@ -162,7 +162,7 @@ else:
 
 env.Replace(
     LIBS=["m"],
-    UPLOADER=join(platform.get_package_dir("tool-openocd"), "bin", "openocd"),
+    UPLOADER="openocd",
     UPLOADERFLAGS=upload_args,
     UPLOADCMD='"$UPLOADER" $UPLOADERFLAGS'
 )
