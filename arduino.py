@@ -29,7 +29,6 @@ platform = env.PioPlatform()
 board = env.BoardConfig()
 
 FRAMEWORK_DIR = platform.get_package_dir("framework-arduinonordicnrf5")
-FRAMEWORK_VERSION = platform.get_package_version("framework-arduinonordicnrf5")
 assert isdir(FRAMEWORK_DIR)
 
 env.Append(
@@ -50,25 +49,20 @@ env.Append(
     ],
 
     LIBPATH=[
-        join(FRAMEWORK_DIR, "cores",
-             env.BoardConfig().get("build.core"), "SDK", "components",
-             "toolchain", "gcc")
+        join(FRAMEWORK_DIR, "cores", board.get("build.core"),
+             "SDK", "components", "toolchain", "gcc")
     ],
 
     CPPPATH=[
-        join(FRAMEWORK_DIR, "cores", env.BoardConfig().get("build.core")),
-        join(FRAMEWORK_DIR, "cores",
-             env.BoardConfig().get("build.core"), "SDK", "components",
-             "drivers_nrf", "delay"),
-        join(FRAMEWORK_DIR, "cores",
-             env.BoardConfig().get("build.core"), "SDK", "components",
-             "device"),
-        join(FRAMEWORK_DIR, "cores",
-             env.BoardConfig().get("build.core"), "SDK", "components",
-             "toolchain"),
-        join(FRAMEWORK_DIR, "cores",
-             env.BoardConfig().get("build.core"), "SDK", "components",
-             "toolchain", "CMSIS", "Include")
+        join(FRAMEWORK_DIR, "cores", board.get("build.core")),
+        join(FRAMEWORK_DIR, "cores", board.get("build.core"),
+             "SDK", "components", "drivers_nrf", "delay"),
+        join(FRAMEWORK_DIR, "cores", board.get("build.core"),
+             "SDK", "components", "device"),
+        join(FRAMEWORK_DIR, "cores", board.get("build.core"),
+             "SDK", "components", "toolchain"),
+        join(FRAMEWORK_DIR, "cores", board.get("build.core"),
+             "SDK", "components", "toolchain", "CMSIS", "Include")
     ],
 
     LINKFLAGS=[
@@ -80,9 +74,14 @@ env.Append(
         "-Wl,--warn-section-align"
     ],
 
-    LIBSOURCE_DIRS=[join(FRAMEWORK_DIR, "libraries")])
+    LIBSOURCE_DIRS=[join(FRAMEWORK_DIR, "libraries")]
+)
 
-if env.BoardConfig().get("build.cpu") == "cortex-m4":
+env.Replace(
+    LIBS=["m"]
+)
+
+if board.get("build.cpu") == "cortex-m4":
     env.Append(
         CCFLAGS=[
             "-mfloat-abi=softfp",
@@ -91,11 +90,11 @@ if env.BoardConfig().get("build.cpu") == "cortex-m4":
     )
 
 env.Append(
-    CPPDEFINES=["%s" % env.BoardConfig().get("build.mcu", "")[0:5].upper()]
+    CPPDEFINES=["%s" % board.get("build.mcu", "")[0:5].upper()]
 )
 
 # Process softdevice options
-softdevice_ver = ""
+softdevice_ver = None
 cpp_defines = env.Flatten(env.get("CPPDEFINES", []))
 if "NRF52_S132" in cpp_defines:
     softdevice_ver = "s132"
@@ -108,16 +107,15 @@ if softdevice_ver:
 
     env.Append(
         CPPPATH=[
-            join(FRAMEWORK_DIR, "cores", env.BoardConfig().get("build.core"),
-            "SDK", "components", "softdevice", softdevice_ver, "headers")
+            join(FRAMEWORK_DIR, "cores", board.get("build.core"),
+                 "SDK", "components", "softdevice", softdevice_ver, "headers")
         ],
 
         CPPDEFINES=["%s" % softdevice_ver.upper()]
     )
 
-    hex_path = join(FRAMEWORK_DIR, "cores",
-                    env.BoardConfig().get("build.core"), "SDK", "components",
-                    "softdevice", softdevice_ver, "hex")
+    hex_path = join(FRAMEWORK_DIR, "cores", board.get("build.core"),
+                    "SDK", "components", "softdevice", softdevice_ver, "hex")
 
     for f in listdir(hex_path):
         if f.endswith(".hex") and f.lower().startswith(softdevice_ver):
@@ -128,10 +126,10 @@ if softdevice_ver:
 
     # Update linker script:
     ldscript_dir = join(FRAMEWORK_DIR, "cores",
-                        env.BoardConfig().get("build.core"), "SDK",
+                        board.get("build.core"), "SDK",
                         "components", "softdevice", softdevice_ver,
                         "toolchain", "armgcc")
-    mcu_family = env.BoardConfig().get("build.ldscript", "").split("_")[1]
+    mcu_family = board.get("build.ldscript", "").split("_")[1]
     ldscript_path = ""
     for f in listdir(ldscript_dir):
         if f.endswith(mcu_family) and softdevice_ver in f.lower():
@@ -148,45 +146,26 @@ clock_options = ("USE_LFXO", "USE_LFRC" "USE_LFSYNT")
 if not any(d in clock_options for d in cpp_defines):
     env.Append(CPPDEFINES=["USE_LFXO"])
 
-# Construct upload flags
-upload_args = []
-upload_protocol = env.subst("$UPLOAD_PROTOCOL")
-debug_tools = env.BoardConfig().get("debug.tools", {})
-if upload_protocol in debug_tools:
-    upload_args = ["-s", platform.get_package_dir("tool-openocd") or ""]
-    upload_args += debug_tools.get(
-        upload_protocol).get("server").get("arguments", [])
-    upload_args += ["-c", "program {{$SOURCE}} verify reset; shutdown;"]
-else:
-    print "Warning! Cannot find an apropriate upload method!"
-
-env.Replace(
-    LIBS=["m"],
-    UPLOADER="openocd",
-    UPLOADERFLAGS=upload_args,
-    UPLOADCMD='"$UPLOADER" $UPLOADERFLAGS'
-)
-
 #
 # Target: Build Core Library
 #
 
 libs = []
 
-if "build.variant" in env.BoardConfig():
+if "build.variant" in board:
     env.Append(CPPPATH=[
-        join(FRAMEWORK_DIR, "variants", env.BoardConfig().get("build.variant"))
+        join(FRAMEWORK_DIR, "variants", board.get("build.variant"))
     ])
 
     libs.append(
         env.BuildLibrary(
             join("$BUILD_DIR", "FrameworkArduinoVariant"),
             join(FRAMEWORK_DIR, "variants",
-                 env.BoardConfig().get("build.variant"))))
+                 board.get("build.variant"))))
 
 libs.append(
     env.BuildLibrary(
         join("$BUILD_DIR", "FrameworkArduino"),
-        join(FRAMEWORK_DIR, "cores", env.BoardConfig().get("build.core"))))
+        join(FRAMEWORK_DIR, "cores", board.get("build.core"))))
 
 env.Prepend(LIBS=libs)
