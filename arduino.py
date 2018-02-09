@@ -42,6 +42,7 @@ env.Append(
     ],
 
     CPPDEFINES=[
+        ("ARDUINO", 10805),
         # For compatibility with sketches designed for AVR@16 MHz (see SPI lib)
         ("F_CPU", "16000000L"),
         "ARDUINO_ARCH_NRF5",
