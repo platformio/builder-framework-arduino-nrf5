@@ -143,7 +143,7 @@ if softdevice_ver:
               "required softdevice!")
 
 # Select crystal oscillator as the low frequency source by default
-clock_options = ("USE_LFXO", "USE_LFRC" "USE_LFSYNT")
+clock_options = ("USE_LFXO", "USE_LFRC", "USE_LFSYNT")
 if not any(d in clock_options for d in cpp_defines):
     env.Append(CPPDEFINES=["USE_LFXO"])
 
