@@ -32,11 +32,23 @@ FRAMEWORK_DIR = platform.get_package_dir("framework-arduinonordicnrf5")
 assert isdir(FRAMEWORK_DIR)
 
 env.Append(
+    ASFLAGS=["-x", "assembler-with-cpp"],
+
     CFLAGS=["-std=gnu11"],
 
-    CCFLAGS=["--param", "max-inline-insns-single=500"],
+    CCFLAGS=[
+        "-Os",  # optimize for size
+        "-ffunction-sections",  # place each function in its own section
+        "-fdata-sections",
+        "-Wall",
+        "-mthumb",
+        "-nostdlib",
+        "--param", "max-inline-insns-single=500"
+    ],
 
     CXXFLAGS=[
+        "-fno-rtti",
+        "-fno-exceptions",
         "-std=gnu++11",
         "-fno-threadsafe-statics"
     ],
@@ -67,6 +79,9 @@ env.Append(
     ],
 
     LINKFLAGS=[
+        "-Os",
+        "-Wl,--gc-sections,--relax",
+        "-mthumb",
         "--specs=nano.specs",
         "--specs=nosys.specs",
         "-Wl,--check-sections",
@@ -75,12 +90,20 @@ env.Append(
         "-Wl,--warn-section-align"
     ],
 
-    LIBSOURCE_DIRS=[join(FRAMEWORK_DIR, "libraries")]
-)
+    LIBSOURCE_DIRS=[join(FRAMEWORK_DIR, "libraries")],
 
-env.Replace(
     LIBS=["m"]
 )
+
+if "BOARD" in env:
+    env.Append(
+        CCFLAGS=[
+            "-mcpu=%s" % env.BoardConfig().get("build.cpu")
+        ],
+        LINKFLAGS=[
+            "-mcpu=%s" % env.BoardConfig().get("build.cpu")
+        ]
+    )
 
 if board.get("build.cpu") == "cortex-m4":
     env.Append(
