@@ -114,6 +114,7 @@ if board.get("build.cpu") == "cortex-m4":
     )
 
 env.Append(
+    ASFLAGS=env.get("CCFLAGS", [])[:],
     CPPDEFINES=["%s" % board.get("build.mcu", "")[0:5].upper()]
 )
 
