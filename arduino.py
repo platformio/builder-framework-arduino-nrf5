@@ -147,7 +147,7 @@ if softdevice_ver:
             env.Append(SOFTDEVICEHEX=join(hex_path, f))
 
     if "SOFTDEVICEHEX" not in env:
-        print "Warning! Cannot find an appropriate softdevice binary!"
+        print("Warning! Cannot find an appropriate softdevice binary!")
 
     # Update linker script:
     ldscript_dir = join(FRAMEWORK_DIR, "cores",
