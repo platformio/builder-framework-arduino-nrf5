@@ -45,15 +45,15 @@ nrf_flags = [
     join(nordic_path, "nrfx", "mdk"),
     join(nordic_path, "nrfx", "soc"),
     join(nordic_path, "nrfx", "drivers", "include"),
-    join(nordic_path, "nrfx", "softdevice", "%s_nrf52_%s_API".format(build.get("softdevice.sd_name"), build.get("softdevice.sd_version")), "include")
+    join(nordic_path, "softdevice", "{0}_nrf52_{1}_API".format(board.get("build.softdevice.sd_name"), board.get("build.softdevice.sd_version")), "include"),
     join(rtos_path, "Source", "include"),
     join(rtos_path, "config"),
     join(rtos_path, "portable", "GCC", "nrf52"),
     join(rtos_path, "portable", "CMSIS", "nrf52"),
     join(core_path, "sysview", "SEGGER"),
     join(core_path, "sysview", "Config"),
-    join(core_path, "sysview", "usb"),
-    join(core_path, "sysview", "usb", "tinyusb", "src"),
+    join(core_path, "usb"),
+    join(core_path, "usb", "tinyusb", "src"),
     join(core_path, "cmsis", "include")
 ]
 
@@ -84,8 +84,8 @@ env.Append(
         # For compatibility with sketches designed for AVR@16 MHz (see SPI lib)
         ("F_CPU", "16000000L"),
         "ARDUINO_ARCH_NRF5",
-        "NRF5"
-        build.get("softdevice.sd_name")
+        "NRF5",
+        board.get("build.softdevice.sd_name")
     ],
 
     LIBPATH=[
@@ -135,18 +135,18 @@ env.Append(
 )
 
 # Process softdevice options
-softdevice_ver = board.get("softdevice.sd_name")
+softdevice_name = board.get("build.softdevice.sd_name")
 
-if softdevice_ver:
+if softdevice_name:
 
     env.Append(
-        CPPDEFINES=["%s" % softdevice_ver]
+        CPPDEFINES=["%s" % softdevice_name.upper()]
     )
 
     hex_path = join(FRAMEWORK_DIR, "bootloader", board.get("build.variant"))
 
     for f in listdir(hex_path):
-        if f.endswith(".hex") and f.lower().startswith(softdevice_ver):
+        if f == "{0}_bootloader-{1}_{2}_{3}.hex".format(variant, board.get("build.softdevice.version"), board.get("build.softdevice.sd_name"), board.get("build.softdevice.sd_version")):
             env.Append(SOFTDEVICEHEX=join(hex_path, f))
 
     if "SOFTDEVICEHEX" not in env:
@@ -154,10 +154,10 @@ if softdevice_ver:
 
     # Update linker script:
     ldscript_dir = join(core_path, "linker")
-    mcu_family = board.get("build.ldscript", "").split("_")[1]
+    mcu_family = board.get("build.mcu")
     ldscript_path = ""
     for f in listdir(ldscript_dir):
-        if f.endswith(mcu_family) and softdevice_ver in f.lower():
+        if f.startswith(mcu_family) and softdevice_name in f.lower():
             ldscript_path = join(ldscript_dir, f)
 
     if ldscript_path:
@@ -165,6 +165,8 @@ if softdevice_ver:
     else:
         print("Warning! Cannot find an appropriate linker script for the "
               "required softdevice!")
+
+cpp_defines = env.Flatten(env.get("CPPDEFINES", []))
 
 # Select crystal oscillator as the low frequency source by default
 clock_options = ("USE_LFXO", "USE_LFRC", "USE_LFSYNT")
