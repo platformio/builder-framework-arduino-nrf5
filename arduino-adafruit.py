@@ -37,7 +37,7 @@ rtos_path = join(core_path, "freertos")
 nordic_path = join(core_path, "nordic")
 
 nrf_flags = [
-    core_path
+    core_path,
     join(core_path, "cmsis", "include"),
     nordic_path,
     join(nordic_path, "nrfx"),
