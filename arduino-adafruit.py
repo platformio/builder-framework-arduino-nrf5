@@ -82,7 +82,7 @@ env.Append(
     CPPDEFINES=[
         ("ARDUINO", 10805),
         # For compatibility with sketches designed for AVR@16 MHz (see SPI lib)
-        ("F_CPU", "16000000L"),
+        ("F_CPU", board.get("build.f_cpu")),
         "ARDUINO_ARCH_NRF5",
         "NRF5",
         board.get("build.softdevice.sd_name")
