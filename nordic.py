@@ -1,3 +1,8 @@
+from os import listdir
+from os.path import isdir, join
+
+from SCons.Script import DefaultEnvironment
+
 class NordicBuilder:
   def __init__(self, env, frameworkDir, platform, board, variant):
     self.env = env
@@ -7,6 +12,7 @@ class NordicBuilder:
     self.variant = variant
 
   def add_cppdefines(self):
+      print("add cpp defines")
     # no additional cppdefines needed
 
   def add_libpath(self):
@@ -18,7 +24,7 @@ class NordicBuilder:
     )
   
   def add_cpppath(self):
-    self.env.append(
+    self.env.Append(
       CPPPATH=[
         join(self.frameworkDir, "cores", self.board.get("build.core")),
         join(self.frameworkDir, "cores", self.board.get("build.core"),

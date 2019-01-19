@@ -23,6 +23,8 @@ from os import listdir
 from os.path import isdir, join
 
 from SCons.Script import DefaultEnvironment
+from adafruit import AdafruitBuilder
+from nordic import NordicBuilder
 
 env = DefaultEnvironment()
 platform = env.PioPlatform()
@@ -34,7 +36,7 @@ if (variant.startswith("feather_nrf")):
     assert isdir(FRAMEWORK_DIR)
     builder = AdafruitBuilder(env, FRAMEWORK_DIR, platform, board, variant)
 else:
-    FRAMEWORK_DIR = platform.get_package_dir("framework-arduinoadafruitnordicnrf5")
+    FRAMEWORK_DIR = platform.get_package_dir("framework-arduinonordicnrf5")
     assert isdir(FRAMEWORK_DIR)
     builder = NordicBuilder(env, FRAMEWORK_DIR, platform, board, variant)
 

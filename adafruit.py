@@ -1,3 +1,8 @@
+from os import listdir
+from os.path import isdir, join
+
+from SCons.Script import DefaultEnvironment
+
 class AdafruitBuilder:
   def __init__(self, env, frameworkDir, platform, board, variant):
     self.env = env
@@ -34,7 +39,7 @@ class AdafruitBuilder:
   def add_cppdefines(self):
     self.env.Append(
       CPP_DEFINES=[
-        board.get("build.softdevice.sd_name")
+        self.board.get("build.softdevice.sd_name")
       ]
     )
 
@@ -46,7 +51,7 @@ class AdafruitBuilder:
     )
   
   def add_cpppath(self):
-    self.env.append(
+    self.env.Append(
       CPPPATH=self.nrf_flags
     )
   
@@ -62,9 +67,9 @@ class AdafruitBuilder:
 
       for f in listdir(hex_path):
           if f == "{0}_bootloader-{1}_{2}_{3}.hex".format(self.variant, self.board.get("build.softdevice.version"), self.board.get("build.softdevice.sd_name"), self.board.get("build.softdevice.sd_version")):
-              env.Append(SOFTDEVICEHEX=join(hex_path, f))
+              self.env.Append(SOFTDEVICEHEX=join(hex_path, f))
 
-      if "SOFTDEVICEHEX" not in env:
+      if "SOFTDEVICEHEX" not in self.env:
           print("Warning! Cannot find an appropriate softdevice binary!")
 
       # Update linker script:
@@ -80,5 +85,3 @@ class AdafruitBuilder:
       else:
           print("Warning! Cannot find an appropriate linker script for the "
                 "required softdevice!")
-
-  
