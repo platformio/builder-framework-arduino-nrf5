@@ -27,9 +27,16 @@ from SCons.Script import DefaultEnvironment
 env = DefaultEnvironment()
 platform = env.PioPlatform()
 board = env.BoardConfig()
+variant = board.get("build.variant")
 
-FRAMEWORK_DIR = platform.get_package_dir("framework-arduinonordicnrf5")
-assert isdir(FRAMEWORK_DIR)
+if (variant.startswith("feather_nrf")):
+    FRAMEWORK_DIR = platform.get_package_dir("framework-arduinoadafruitnordicnrf5")
+    assert isdir(FRAMEWORK_DIR)
+    builder = AdafruitBuilder(env, FRAMEWORK_DIR, platform, board, variant)
+else:
+    FRAMEWORK_DIR = platform.get_package_dir("framework-arduinoadafruitnordicnrf5")
+    assert isdir(FRAMEWORK_DIR)
+    builder = NordicBuilder(env, FRAMEWORK_DIR, platform, board, variant)
 
 env.Append(
     ASFLAGS=["-x", "assembler-with-cpp"],
@@ -55,27 +62,9 @@ env.Append(
 
     CPPDEFINES=[
         ("ARDUINO", 10805),
-        # For compatibility with sketches designed for AVR@16 MHz (see SPI lib)
-        ("F_CPU", "16000000L"),
+        ("F_CPU", board.get("build.f_cpu")),
         "ARDUINO_ARCH_NRF5",
         "NRF5"
-    ],
-
-    LIBPATH=[
-        join(FRAMEWORK_DIR, "cores", board.get("build.core"),
-             "SDK", "components", "toolchain", "gcc")
-    ],
-
-    CPPPATH=[
-        join(FRAMEWORK_DIR, "cores", board.get("build.core")),
-        join(FRAMEWORK_DIR, "cores", board.get("build.core"),
-             "SDK", "components", "drivers_nrf", "delay"),
-        join(FRAMEWORK_DIR, "cores", board.get("build.core"),
-             "SDK", "components", "device"),
-        join(FRAMEWORK_DIR, "cores", board.get("build.core"),
-             "SDK", "components", "toolchain"),
-        join(FRAMEWORK_DIR, "cores", board.get("build.core"),
-             "SDK", "components", "toolchain", "CMSIS", "Include")
     ],
 
     LINKFLAGS=[
@@ -94,6 +83,10 @@ env.Append(
 
     LIBS=["m"]
 )
+
+builder.add_cppdefines()
+builder.add_libpath()
+builder.add_cpppath()
 
 if "BOARD" in env:
     env.Append(
@@ -119,52 +112,9 @@ env.Append(
 )
 
 # Process softdevice options
-softdevice_ver = None
+builder.process_softdevice()
+
 cpp_defines = env.Flatten(env.get("CPPDEFINES", []))
-if "NRF52_S132" in cpp_defines:
-    softdevice_ver = "s132"
-elif "NRF51_S130" in cpp_defines:
-    softdevice_ver = "s130"
-elif "NRF51_S110" in cpp_defines:
-    softdevice_ver = "s110"
-
-if softdevice_ver:
-
-    env.Append(
-        CPPPATH=[
-            join(FRAMEWORK_DIR, "cores", board.get("build.core"),
-                 "SDK", "components", "softdevice", softdevice_ver, "headers")
-        ],
-
-        CPPDEFINES=["%s" % softdevice_ver.upper()]
-    )
-
-    hex_path = join(FRAMEWORK_DIR, "cores", board.get("build.core"),
-                    "SDK", "components", "softdevice", softdevice_ver, "hex")
-
-    for f in listdir(hex_path):
-        if f.endswith(".hex") and f.lower().startswith(softdevice_ver):
-            env.Append(SOFTDEVICEHEX=join(hex_path, f))
-
-    if "SOFTDEVICEHEX" not in env:
-        print("Warning! Cannot find an appropriate softdevice binary!")
-
-    # Update linker script:
-    ldscript_dir = join(FRAMEWORK_DIR, "cores",
-                        board.get("build.core"), "SDK",
-                        "components", "softdevice", softdevice_ver,
-                        "toolchain", "armgcc")
-    mcu_family = board.get("build.ldscript", "").split("_")[1]
-    ldscript_path = ""
-    for f in listdir(ldscript_dir):
-        if f.endswith(mcu_family) and softdevice_ver in f.lower():
-            ldscript_path = join(ldscript_dir, f)
-
-    if ldscript_path:
-        env.Replace(LDSCRIPT_PATH=ldscript_path)
-    else:
-        print("Warning! Cannot find an appropriate linker script for the "
-              "required softdevice!")
 
 # Select crystal oscillator as the low frequency source by default
 clock_options = ("USE_LFXO", "USE_LFRC", "USE_LFSYNT")
