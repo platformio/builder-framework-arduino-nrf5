@@ -74,7 +74,7 @@ class NordicBuilder:
                             self.board.get("build.core"), "SDK",
                             "components", "softdevice", softdevice_ver,
                             "toolchain", "armgcc")
-        mcu_family = board.get("build.ldscript", "").split("_")[1]
+        mcu_family = self.board.get("build.ldscript", "").split("_")[1]
         ldscript_path = ""
         for f in listdir(ldscript_dir):
             if f.endswith(mcu_family) and softdevice_ver in f.lower():
