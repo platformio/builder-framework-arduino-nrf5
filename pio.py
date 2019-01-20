@@ -3,7 +3,7 @@ from os.path import isdir, join
 
 from SCons.Script import DefaultEnvironment
 
-class NordicBuilder:
+class PioBuilder:
   def __init__(self, env, frameworkDir, platform, board, variant):
     self.env = env
     self.frameworkDir = frameworkDir
