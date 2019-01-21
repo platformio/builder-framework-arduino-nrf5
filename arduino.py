@@ -31,6 +31,17 @@ platform = env.PioPlatform()
 board = env.BoardConfig()
 variant = board.get("build.variant")
 
+build_flags = env.Flatten(env.get("BUILD_FLAGS", []))
+
+# if specified, use the appropriate builder
+if (build_flags.contains("USE_ADAFRUIT_BSP")):
+    FRAMEWORK_DIR = platform.get_package_dir("framework-arduinoadafruitnordicnrf5")
+    assert isdir(FRAMEWORK_DIR)
+    builder = AdafruitBuilder(env, FRAMEWORK_DIR, platform, board, variant)
+elif (build_flags.contains("USE_SANDEEP_BSP")):
+    FRAMEWORK_DIR = platform.get_package_dir("framework-arduinonordicnrf5")
+    assert isdir(FRAMEWORK_DIR)
+    builder = NordicBuilder(env, FRAMEWORK_DIR, platform, board, variant)
 if (variant.startswith("feather_nrf")):
     FRAMEWORK_DIR = platform.get_package_dir("framework-arduinoadafruitnordicnrf5")
     assert isdir(FRAMEWORK_DIR)
