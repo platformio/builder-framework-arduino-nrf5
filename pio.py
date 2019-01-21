@@ -11,6 +11,15 @@ class PioBuilder:
     self.board = board
     self.variant = variant
 
+  def add_cpuflags(self):
+    self.env.Append(
+      CCFLAGS=[
+        "-mfloat-abi=softfp",
+        "-mfpu=fpv4-sp-d16"
+      ]
+    )
+
+
   def add_cppdefines(self):
       print("add cpp defines")
     # no additional cppdefines needed

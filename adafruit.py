@@ -11,35 +11,41 @@ class AdafruitBuilder:
     self.board = board
     self.variant = variant
 
-    self.core_path = join(self.frameworkDir, "cores", board.get("build.core"))
-    self.rtos_path = join(self.core_path, "freertos")
-    self.nordic_path = join(self.core_path, "nordic")
+    self.coreDir = join(frameworkDir, "cores", board.get("build.core")) 
+    assert isdir(self.coreDir) 
 
-    self.nrf_flags = [
-        self.core_path,
-        join(self.core_path, "cmsis", "include"),
-        self.nordic_path,
-        join(self.nordic_path, "nrfx"),
-        join(self.nordic_path, "nrfx", "hal"),
-        join(self.nordic_path, "nrfx", "mdk"),
-        join(self.nordic_path, "nrfx", "soc"),
-        join(self.nordic_path, "nrfx", "drivers", "include"),
-        join(self.nordic_path, "softdevice", "{0}_nrf52_{1}_API".format(self.board.get("build.softdevice.sd_name"), self.board.get("build.softdevice.sd_version")), "include"),
-        join(self.rtos_path, "Source", "include"),
-        join(self.rtos_path, "config"),
-        join(self.rtos_path, "portable", "GCC", "nrf52"),
-        join(self.rtos_path, "portable", "CMSIS", "nrf52"),
-        join(self.core_path, "sysview", "SEGGER"),
-        join(self.core_path, "sysview", "Config"),
-        join(self.core_path, "usb"),
-        join(self.core_path, "usb", "tinyusb", "src"),
-        join(self.core_path, "cmsis", "include")
-    ]
+    self.nordicDir = join(self.coreDir, "nordic")
+    assert isdir(self.nordicDir)
+
+    self.bsp_version = board.get("build.bsp.version", "0.9.3")
+    self.softdevice_version = board.get("build.softdevice.sd_version", "6.1.1")
+    self.bootloader_version = board.get("build.bootloader.version", "0.2.6") 
+    self.softdevice_name = self.board.get("build.softdevice.sd_name")
+    self.board_name = self.board.get("build.bootloader", self.board.get("build.variant"))
+
+  def add_cpuflags(self):
+    self.env.Append(
+        CCFLAGS=[
+            "-mfloat-abi=hard",
+            "-mfpu=fpv4-sp-d16",
+            "-u _printf_float"
+        ],
+        LINKFLAGS=[
+            "-mfloat-abi=hard",
+            "-mfpu=fpv4-sp-d16",
+            "-u _printf_float"
+        ]
+    )
 
   def add_cppdefines(self):
     self.env.Append(
       CPP_DEFINES=[
-        self.board.get("build.softdevice.sd_name")
+        "NRF52",
+        "ARDUINO_FEATHER52",
+        "ARDUINO_NRF52_ADAFRUIT",
+        "NRF52_SERIES",
+        self.softdevice_name, 
+        ("F_CPU", self.board.get("build.f_cpu"))
       ]
     )
 
@@ -52,15 +58,58 @@ class AdafruitBuilder:
   
   def add_cpppath(self):
     self.env.Append(
-      CPPPATH=self.nrf_flags
+      CPPPATH=[ 
+        join(self.coreDir), 
+        join(self.coreDir, "cmsis", "include"), 
+        join(self.nordicDir), 
+        join(self.nordicDir, "nrfx"), 
+        join(self.nordicDir, "nrfx", "hal"), 
+        join(self.nordicDir, "nrfx", "mdk"), 
+        join(self.nordicDir, "nrfx", "soc"), 
+        join(self.nordicDir, "nrfx", "drivers", "include"), 
+      ]
     )
+
+    self.rtosDir = join(self.coreDir, "freertos")
+    if(isdir(self.rtosDir)):
+      self.env.Append(
+        CPPPATH=[
+            join(self.rtosDir, "Source", "include"),
+            join(self.rtosDir, "config"),
+            join(self.rtosDir, "portable", "GCC", "nrf52"),
+            join(self.rtosDir, "portable", "CMSIS", "nrf52")
+        ]
+    )
+
+    self.sysviewDir = join(self.coreDir, "sysview")
+    if(isdir(self.sysviewDir)):
+        self.env.Append(
+            CPPPATH=[
+                join(self.sysviewDir, "SEGGER"),
+                join(self.sysviewDir, "Config")
+            ]
+        )
+
+    self.usbDir = join(self.coreDir, "usb")
+    if(isdir(self.usbDir)):
+        self.env.Append(
+            CPPPATH=[
+                join(self.usbDir),
+                join(self.usbDir, "tinyusb", "src")
+            ]
+        )
   
   def process_softdevice(self):
-    softdevice_name = self.board.get("build.softdevice.sd_name")
-
-    if softdevice_name:
+    if self.softdevice_name:
       self.env.Append(
-          CPPDEFINES=["%s" % softdevice_name.upper()]
+        CPPPATH=[
+          join(self.nordicDir, "softdevice", "%s_nrf52_%s_API" % (self.softdevice_name, self.softdevice_version), "include") 
+        ],
+        CPPDEFINES=[
+          "%s" % self.softdevice_name.upper(), 
+          "NRF52_"+(self.softdevice_name.upper()), 
+          "SOFTDEVICE_PRESENT" 
+        ] 
       )
 
       hex_path = join(self.frameworkDir, "bootloader", self.board.get("build.variant"))
@@ -75,13 +124,11 @@ class AdafruitBuilder:
       # Update linker script:
       ldscript_dir = join(self.core_path, "linker")
       mcu_family = self.board.get("build.mcu")
-      ldscript_path = ""
-      for f in listdir(ldscript_dir):
-          if f.startswith(mcu_family) and softdevice_name in f.lower():
-              ldscript_path = join(ldscript_dir, f)
-
-      if ldscript_path:
-          self.env.Replace(LDSCRIPT_PATH=ldscript_path)
-      else:
-          print("Warning! Cannot find an appropriate linker script for the "
-                "required softdevice!")
+      ldscript_name = self.board.get("build.ldscript", "")
+      if ldscript_name: 
+            ldscript_path = join(ldscript_dir, f) 
+            self.env.Append(LINKFLAGS=[ 
+              "-L"+ldscript_dir,
+#             "-T"+ldscript_name  
+            ]) 
+            self.env.Replace(LDSCRIPT_PATH=ldscript_name) 
