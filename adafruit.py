@@ -39,7 +39,7 @@ NORDIC_DIR = join(CORE_DIR, "nordic")
 assert isdir(NORDIC_DIR)
 
 # IMPROVE: Read all of these (defaults) from build.txt/platform.txt/programmers.txt?
-bsp_version = board.get("build.bsp.version", "0.9.2")
+bsp_version = board.get("build.bsp.version", "0.9.3")
 softdevice_version = board.get("build.softdevice.sd_version", "6.1.1")
 bootloader_version = board.get("build.bootloader.version", "0.2.6")
 
@@ -66,16 +66,13 @@ env.Append(
     ],
 
     CPPDEFINES=[
-        ("ARDUINO", 10805),
-        # For compatibility with sketches designed for AVR@16 MHz (see SPI lib)
         ("F_CPU", board.get("build.f_cpu")),
-        "ARDUINO_ARCH_NRF5",
-        "NRF5",
-        "NRF52",
+        ("ARDUINO", 10804),
+        "ARDUINO_ARCH_NRF52",
+        ("ARDUINO_BSP_VERSION", '\\"%s\\"' % bsp_version ),
         "ARDUINO_FEATHER52",
         "ARDUINO_NRF52_ADAFRUIT",
-        "NRF52_SERIES",
-        ("ARDUINO_BSP_VERSION", '\\"%s\\"' % bsp_version )
+        "NRF52_SERIES"
     ],
 
     LIBPATH=[
@@ -101,7 +98,6 @@ env.Append(
     # "-I{build.core.path}/usb/tinyusb/src"
 
     CPPPATH = [
-        join(CORE_DIR),
         join(CORE_DIR, "cmsis", "include"),
         join(NORDIC_DIR),
         join(NORDIC_DIR, "nrfx"),
@@ -162,12 +158,12 @@ if board.get("build.cpu") == "cortex-m4":
 
 env.Append(
     ASFLAGS=env.get("CCFLAGS", [])[:],
-    CPPDEFINES=["%s" % board.get("build.mcu", "")[0:5].upper()]
+    CPPDEFINES=["%s" % board.get("build.mcu", "").upper()]
 )
 
 # Process softdevice options
 softdevice_name = board.get("build.softdevice.sd_name")
-board_name = board.get("build.bootloader", board.get("build.variant"))
+board_name = board.get("build.bootloader.hex_filename", board.get("build.variant"))
 
 if softdevice_name:
     env.Append(
@@ -233,6 +229,12 @@ if(isdir(usb_path)):
             join(usb_path, "tinyusb", "src")
         ]
     )
+
+env.Append(
+    CPPPATH=[
+        join(CORE_DIR),
+    ]
+)
 
 #print env.Dump()
 
