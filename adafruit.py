@@ -29,7 +29,7 @@ platform = env.PioPlatform()
 board = env.BoardConfig()
 variant = board.get("build.variant")
 
-FRAMEWORK_DIR = platform.get_package_dir("framework-arduinoadafruitnordicnrf5")
+FRAMEWORK_DIR = platform.get_package_dir("framework-arduinoadafruitnrf52")
 assert isdir(FRAMEWORK_DIR)
 
 CORE_DIR = join(FRAMEWORK_DIR, "cores", board.get("build.core"))
@@ -79,22 +79,22 @@ env.Append(
         join(CORE_DIR, "linker")
     ],
 
-    #compiler.nrf.flags= -DARDUINO_FEATHER52 -DARDUINO_NRF52_ADAFRUIT -DNRF52_SERIES {build.flags} {build.debug_flags} 
-    # "-I{build.core.path}/cmsis/include" 
-    # "-I{nordic.path}" 
-    # "-I{nordic.path}/nrfx" 
-    # "-I{nordic.path}/nrfx/hal" 
-    # "-I{nordic.path}/nrfx/mdk" 
-    # "-I{nordic.path}/nrfx/soc" 
-    # "-I{nordic.path}/nrfx/drivers/include" 
-    # "-I{nordic.path}/softdevice/{build.name}_nrf52_{build.version}_API/include" 
-    # "-I{rtos.path}/Source/include" 
-    # "-I{rtos.path}/config" 
+    #compiler.nrf.flags= -DARDUINO_FEATHER52 -DARDUINO_NRF52_ADAFRUIT -DNRF52_SERIES {build.flags} {build.debug_flags}
+    # "-I{build.core.path}/cmsis/include"
+    # "-I{nordic.path}"
+    # "-I{nordic.path}/nrfx"
+    # "-I{nordic.path}/nrfx/hal"
+    # "-I{nordic.path}/nrfx/mdk"
+    # "-I{nordic.path}/nrfx/soc"
+    # "-I{nordic.path}/nrfx/drivers/include"
+    # "-I{nordic.path}/softdevice/{build.name}_nrf52_{build.version}_API/include"
+    # "-I{rtos.path}/Source/include"
+    # "-I{rtos.path}/config"
     # "-I{rtos.path}/portable/GCC/nrf52"
-    # "-I{rtos.path}/portable/CMSIS/nrf52" 
-    # "-I{build.core.path}/sysview/SEGGER" 
-    # "-I{build.core.path}/sysview/Config" 
-    # "-I{build.core.path}/usb" 
+    # "-I{rtos.path}/portable/CMSIS/nrf52"
+    # "-I{build.core.path}/sysview/SEGGER"
+    # "-I{build.core.path}/sysview/Config"
+    # "-I{build.core.path}/usb"
     # "-I{build.core.path}/usb/tinyusb/src"
 
     CPPPATH = [
