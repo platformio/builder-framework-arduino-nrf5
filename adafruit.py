@@ -24,6 +24,9 @@ from os.path import isdir, join
 
 from SCons.Script import DefaultEnvironment
 
+import re
+import sys
+
 env = DefaultEnvironment()
 platform = env.PioPlatform()
 board = env.BoardConfig()
@@ -38,10 +41,31 @@ assert isdir(CORE_DIR)
 NORDIC_DIR = join(CORE_DIR, "nordic")
 assert isdir(NORDIC_DIR)
 
-# IMPROVE: Read all of these (defaults) from build.txt/platform.txt/programmers.txt?
-bsp_version = board.get("build.bsp.version", "0.9.3")
-softdevice_version = board.get("build.softdevice.sd_version", "6.1.1")
-bootloader_version = board.get("build.bootloader.version", "0.2.6")
+default_bsp_version = "0.9.3"
+default_softdevice_version = "6.1.1"
+default_bootloader_version = "0.2.6"
+
+# Read defaults from build.txt/platform.txt/programmers.txt
+with open(join(FRAMEWORK_DIR, "platform.txt"), "r") as file:
+    for line in file:
+        match = re.search("^version=(\d+\.\d+.\d+)", line)
+        if match:
+            default_bsp_version = match.group(1)
+        match = re.search("_bootloader-(\d+\.\d+.\d+)_", line)
+        if match:
+            default_bootloader_version = match.group(1)
+
+with open(join(FRAMEWORK_DIR, "boards.txt"), "r") as file:
+    for line in file:
+        match = re.search("build.sd_version=(\d+\.\d+.\d+)", line)
+        if match:
+            default_softdevice_version = match.group(1)
+
+bsp_version = board.get("build.bsp.version", default_bsp_version)
+softdevice_version = board.get("build.softdevice.sd_version", default_softdevice_version)
+bootloader_version = board.get("build.bootloader.version", default_bootloader_version)
+
+print(bsp_version, softdevice_version, bootloader_version)
 
 env.Append(
     ASFLAGS=["-x", "assembler-with-cpp"],
