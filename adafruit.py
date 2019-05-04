@@ -25,7 +25,6 @@ from os.path import isdir, join
 from SCons.Script import DefaultEnvironment
 
 import re
-import sys
 
 env = DefaultEnvironment()
 platform = env.PioPlatform()
@@ -46,18 +45,18 @@ default_softdevice_version = "6.1.1"
 default_bootloader_version = "0.2.6"
 
 # Read defaults from build.txt/platform.txt/programmers.txt
-with open(join(FRAMEWORK_DIR, "platform.txt"), "r") as file:
-    for line in file:
-        match = re.search("^version=(\d+\.\d+.\d+)", line)
+with open(join(FRAMEWORK_DIR, "platform.txt"), "r") as fp:
+    for line in fp:
+        match = re.search(r"^version=(\d+\.\d+.\d+)", line)
         if match:
             default_bsp_version = match.group(1)
-        match = re.search("_bootloader-(\d+\.\d+.\d+)_", line)
+        match = re.search(r"_bootloader-(\d+\.\d+.\d+)_", line)
         if match:
             default_bootloader_version = match.group(1)
 
-with open(join(FRAMEWORK_DIR, "boards.txt"), "r") as file:
-    for line in file:
-        match = re.search("build.sd_version=(\d+\.\d+.\d+)", line)
+with open(join(FRAMEWORK_DIR, "boards.txt"), "r") as fp:
+    for line in fp:
+        match = re.search(r"build.sd_version=(\d+\.\d+.\d+)", line)
         if match:
             default_softdevice_version = match.group(1)
 
@@ -65,7 +64,7 @@ bsp_version = board.get("build.bsp.version", default_bsp_version)
 softdevice_version = board.get("build.softdevice.sd_version", default_softdevice_version)
 bootloader_version = board.get("build.bootloader.version", default_bootloader_version)
 
-print(bsp_version, softdevice_version, bootloader_version)
+# print(bsp_version, softdevice_version, bootloader_version)
 
 env.Append(
     ASFLAGS=["-x", "assembler-with-cpp"],
@@ -93,7 +92,7 @@ env.Append(
         ("F_CPU", board.get("build.f_cpu")),
         ("ARDUINO", 10804),
         "ARDUINO_ARCH_NRF52",
-        ("ARDUINO_BSP_VERSION", '\\"%s\\"' % bsp_version ),
+        ("ARDUINO_BSP_VERSION", '\\"%s\\"' % bsp_version),
         "ARDUINO_FEATHER52",
         "ARDUINO_NRF52_ADAFRUIT",
         "NRF52_SERIES"
@@ -103,25 +102,7 @@ env.Append(
         join(CORE_DIR, "linker")
     ],
 
-    #compiler.nrf.flags= -DARDUINO_FEATHER52 -DARDUINO_NRF52_ADAFRUIT -DNRF52_SERIES {build.flags} {build.debug_flags}
-    # "-I{build.core.path}/cmsis/include"
-    # "-I{nordic.path}"
-    # "-I{nordic.path}/nrfx"
-    # "-I{nordic.path}/nrfx/hal"
-    # "-I{nordic.path}/nrfx/mdk"
-    # "-I{nordic.path}/nrfx/soc"
-    # "-I{nordic.path}/nrfx/drivers/include"
-    # "-I{nordic.path}/softdevice/{build.name}_nrf52_{build.version}_API/include"
-    # "-I{rtos.path}/Source/include"
-    # "-I{rtos.path}/config"
-    # "-I{rtos.path}/portable/GCC/nrf52"
-    # "-I{rtos.path}/portable/CMSIS/nrf52"
-    # "-I{build.core.path}/sysview/SEGGER"
-    # "-I{build.core.path}/sysview/Config"
-    # "-I{build.core.path}/usb"
-    # "-I{build.core.path}/usb/tinyusb/src"
-
-    CPPPATH = [
+    CPPPATH=[
         join(CORE_DIR, "cmsis", "include"),
         join(NORDIC_DIR),
         join(NORDIC_DIR, "nrfx"),
@@ -216,10 +197,7 @@ if softdevice_name:
     ldscript_name = board.get("build.ldscript", "")
 
     if ldscript_name:
-        env.Append(LINKFLAGS=[
-            "-L"+ldscript_dir,
-#            "-T"+ldscript_name
-        ])
+        env.Append(LIBPATH=[ldscript_dir])
         env.Replace(LDSCRIPT_PATH=ldscript_name)
     else:
         print("Warning! Cannot find an appropriate linker script for the "
@@ -259,8 +237,6 @@ env.Append(
         join(CORE_DIR),
     ]
 )
-
-#print env.Dump()
 
 # cpp_defines = env.Flatten(env.get("CPPDEFINES", []))
 
