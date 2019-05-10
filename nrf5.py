@@ -58,7 +58,8 @@ env.Append(
         # For compatibility with sketches designed for AVR@16 MHz (see SPI lib)
         ("F_CPU", "16000000L"),
         "ARDUINO_ARCH_NRF5",
-        "NRF5"
+        "NRF5",
+        "%s" % board.get("build.mcu", "")[0:5].upper()
     ],
 
     LIBPATH=[
@@ -80,7 +81,7 @@ env.Append(
 
     LINKFLAGS=[
         "-Os",
-        "-Wl,--gc-sections,--relax",
+        "-Wl,--gc-sections",
         "-mthumb",
         "--specs=nano.specs",
         "--specs=nosys.specs",
@@ -114,8 +115,7 @@ if board.get("build.cpu") == "cortex-m4":
     )
 
 env.Append(
-    ASFLAGS=env.get("CCFLAGS", [])[:],
-    CPPDEFINES=["%s" % board.get("build.mcu", "")[0:5].upper()]
+    ASFLAGS=env.get("CCFLAGS", [])[:]
 )
 
 # Process softdevice options
