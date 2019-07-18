@@ -40,9 +40,9 @@ assert isdir(CORE_DIR)
 NORDIC_DIR = join(CORE_DIR, "nordic")
 assert isdir(NORDIC_DIR)
 
-default_bsp_version = "0.9.3"
+default_bsp_version = "0.11.1"
 default_softdevice_version = "6.1.1"
-default_bootloader_version = "0.2.6"
+default_bootloader_version = "0.2.11"
 
 # Read defaults from build.txt/platform.txt/programmers.txt
 with open(join(FRAMEWORK_DIR, "platform.txt"), "r") as fp:
@@ -95,7 +95,8 @@ env.Append(
         ("ARDUINO_BSP_VERSION", '\\"%s\\"' % bsp_version),
         "ARDUINO_FEATHER52",
         "ARDUINO_NRF52_ADAFRUIT",
-        "NRF52_SERIES"
+        "NRF52_SERIES",
+        ("LFS_NAME_MAX", 64)
     ],
 
     LIBPATH=[
@@ -110,6 +111,7 @@ env.Append(
         join(NORDIC_DIR, "nrfx", "mdk"),
         join(NORDIC_DIR, "nrfx", "soc"),
         join(NORDIC_DIR, "nrfx", "drivers", "include"),
+        join(NORDIC_DIR, "nrfx", "drivers", "src")
     ],
 
     LINKFLAGS=[
@@ -140,14 +142,6 @@ if "BOARD" in env:
     )
 
 if board.get("build.cpu") == "cortex-m4":
-    # Add option to use software FP?
-    #env.Append(
-    #    CCFLAGS=[
-    #        "-mfloat-abi=softfp",
-    #        "-mfpu=fpv4-sp-d16"
-    #    ]
-    #)
-
     env.Append(
         CCFLAGS=[
             "-mfloat-abi=hard",
@@ -173,11 +167,12 @@ board_name = board.get("build.bootloader.hex_filename", board.get("build.variant
 if softdevice_name:
     env.Append(
         CPPPATH=[
-            join(NORDIC_DIR, "softdevice", "%s_nrf52_%s_API" % (softdevice_name, softdevice_version), "include")
+            join(NORDIC_DIR, "softdevice",
+                 "%s_nrf52_%s_API" % (softdevice_name, softdevice_version), "include")
         ],
         CPPDEFINES=[
             "%s" % softdevice_name.upper(),
-            "NRF52_"+(softdevice_name.upper()),
+            "NRF52_" + (softdevice_name.upper()),
             "SOFTDEVICE_PRESENT"
         ]
     )
@@ -185,7 +180,8 @@ if softdevice_name:
     hex_path = join(FRAMEWORK_DIR, "bootloader", board_name)
 
     for f in listdir(hex_path):
-        if f == "{0}_bootloader-{1}_{2}_{3}.hex".format(variant, bootloader_version, softdevice_name, softdevice_version):
+        if f == "{0}_bootloader-{1}_{2}_{3}.hex".format(
+                variant, bootloader_version, softdevice_name, softdevice_version):
             env.Append(DFUBOOTHEX=join(hex_path, f))
 
     if "DFUBOOTHEX" not in env:
@@ -223,8 +219,16 @@ if(isdir(sysview_path)):
         ]
     )
 
-usb_path = join(CORE_DIR, "usb")
+usb_path = join(CORE_DIR, "Adafruit_TinyUSB_Core")
 if(isdir(usb_path)):
+    if env.subst("$BOARD") != "adafruit_feather_nrf52832":
+        env.Append(
+            CPPDEFINES=[
+                "USBCON",
+                "USE_TINYUSB"
+            ]
+        )
+
     env.Append(
         CPPPATH=[
             join(usb_path),
@@ -232,18 +236,22 @@ if(isdir(usb_path)):
         ]
     )
 
+if "build.usb_product" in env.BoardConfig():
+    env.Append(
+        CPPDEFINES=[
+            ("USB_VID", board.get("build.hwids")[0][0]),
+            ("USB_PID", board.get("build.hwids")[0][1]),
+            ("USB_PRODUCT", '\\"%s\\"' % board.get("build.usb_product", "").replace('"', "")),
+            ("USB_MANUFACTURER", '\\"%s\\"' % board.get("vendor", "").replace('"', ""))
+        ]
+    )
+
+
 env.Append(
     CPPPATH=[
-        join(CORE_DIR),
+        join(CORE_DIR)
     ]
 )
-
-# cpp_defines = env.Flatten(env.get("CPPDEFINES", []))
-
-# Select crystal oscillator as the low frequency source by default
-#clock_options = ("USE_LFXO", "USE_LFRC", "USE_LFSYNT")
-#if not any(d in clock_options for d in cpp_defines):
-#    env.Append(CPPDEFINES=["USE_LFXO"])
 
 #
 # Target: Build Core Library
