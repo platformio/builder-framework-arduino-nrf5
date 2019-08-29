@@ -40,9 +40,9 @@ assert isdir(CORE_DIR)
 NORDIC_DIR = join(CORE_DIR, "nordic")
 assert isdir(NORDIC_DIR)
 
-default_bsp_version = "0.11.1"
+default_bsp_version = "0.13.0"
 default_softdevice_version = "6.1.1"
-default_bootloader_version = "0.2.11"
+default_bootloader_version = "0.2.12"
 
 # Read defaults from build.txt/platform.txt/programmers.txt
 with open(join(FRAMEWORK_DIR, "platform.txt"), "r") as fp:
@@ -72,7 +72,7 @@ env.Append(
     CFLAGS=["-std=gnu11"],
 
     CCFLAGS=[
-        "-Os",  # optimize for size
+        "-Ofast",
         "-ffunction-sections",  # place each function in its own section
         "-fdata-sections",
         "-Wall",
@@ -115,7 +115,7 @@ env.Append(
     ],
 
     LINKFLAGS=[
-        "-Os",
+        "-Ofast",
         "-Wl,--gc-sections,--relax",
         "-mthumb",
         "--specs=nano.specs",
