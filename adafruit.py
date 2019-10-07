@@ -40,9 +40,9 @@ assert isdir(CORE_DIR)
 NORDIC_DIR = join(CORE_DIR, "nordic")
 assert isdir(NORDIC_DIR)
 
-default_bsp_version = "0.13.0"
+default_bsp_version = "0.14.0"
 default_softdevice_version = "6.1.1"
-default_bootloader_version = "0.2.12"
+default_bootloader_version = "0.2.13"
 
 # Read defaults from build.txt/platform.txt/programmers.txt
 with open(join(FRAMEWORK_DIR, "platform.txt"), "r") as fp:
@@ -252,6 +252,11 @@ env.Append(
         join(CORE_DIR)
     ]
 )
+
+cpp_flags = env.Flatten(env.get("CPPDEFINES", []))
+
+if "CFG_DEBUG" not in cpp_flags:
+    env.Append(CPPDEFINES=[("CFG_DEBUG", 0)])
 
 #
 # Target: Build Core Library
