@@ -40,7 +40,7 @@ assert isdir(CORE_DIR)
 NORDIC_DIR = join(CORE_DIR, "nordic")
 assert isdir(NORDIC_DIR)
 
-default_bsp_version = "0.14.0"
+default_bsp_version = "0.14.5"
 default_softdevice_version = "6.1.1"
 default_bootloader_version = "0.2.13"
 
