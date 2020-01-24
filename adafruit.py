@@ -187,17 +187,16 @@ if softdevice_name:
     if "DFUBOOTHEX" not in env:
         print("Warning! Cannot find an appropriate softdevice binary!")
 
-    # Update linker script:
-    ldscript_dir = join(CORE_DIR, "linker")
-    mcu_family = board.get("build.mcu")
-    ldscript_name = board.get("build.ldscript", "")
-
-    if ldscript_name:
-        env.Append(LIBPATH=[ldscript_dir])
-        env.Replace(LDSCRIPT_PATH=ldscript_name)
-    else:
-        print("Warning! Cannot find an appropriate linker script for the "
-              "required softdevice!")
+    if not board.get("build.ldscript", ""):
+        # Update linker script:
+        ldscript_dir = join(CORE_DIR, "linker")
+        ldscript_name = board.get("build.arduino.ldscript", "")
+        if ldscript_name:
+            env.Append(LIBPATH=[ldscript_dir])
+            env.Replace(LDSCRIPT_PATH=ldscript_name)
+        else:
+            print("Warning! Cannot find an appropriate linker script for the "
+                  "required softdevice!")
 
 freertos_path = join(CORE_DIR, "freertos")
 if(isdir(freertos_path)):
