@@ -43,7 +43,7 @@ def load_flags(filename):
         return []
 
     with open(file_path, "r") as fp:
-        return [f.strip() for f in fp.readlines()]
+        return [f.strip() for f in fp.readlines() if f.strip()]
 
 
 cflags = set(load_flags("cflags"))
@@ -57,7 +57,7 @@ env.Append(
 
     CCFLAGS=sorted(list(ccflags)),
 
-    CPPDEFINES=load_flags("defines"),
+    CPPDEFINES=[d.replace("-D", "") for d in load_flags("defines")],
 
     CXXFLAGS=sorted(list(cxxflags - ccflags)),
 
