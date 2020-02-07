@@ -40,9 +40,9 @@ assert isdir(CORE_DIR)
 NORDIC_DIR = join(CORE_DIR, "nordic")
 assert isdir(NORDIC_DIR)
 
-default_bsp_version = "0.18.0"
+default_bsp_version = "0.14.5"
 default_softdevice_version = "6.1.1"
-default_bootloader_version = "0.3.0"
+default_bootloader_version = "0.2.13"
 
 # Read defaults from build.txt/platform.txt/programmers.txt
 with open(join(FRAMEWORK_DIR, "platform.txt"), "r") as fp:
@@ -187,16 +187,17 @@ if softdevice_name:
     if "DFUBOOTHEX" not in env:
         print("Warning! Cannot find an appropriate softdevice binary!")
 
-    if not board.get("build.ldscript", ""):
-        # Update linker script:
-        ldscript_dir = join(CORE_DIR, "linker")
-        ldscript_name = board.get("build.arduino.ldscript", "")
-        if ldscript_name:
-            env.Append(LIBPATH=[ldscript_dir])
-            env.Replace(LDSCRIPT_PATH=ldscript_name)
-        else:
-            print("Warning! Cannot find an appropriate linker script for the "
-                  "required softdevice!")
+    # Update linker script:
+    ldscript_dir = join(CORE_DIR, "linker")
+    mcu_family = board.get("build.mcu")
+    ldscript_name = board.get("build.ldscript", "")
+
+    if ldscript_name:
+        env.Append(LIBPATH=[ldscript_dir])
+        env.Replace(LDSCRIPT_PATH=ldscript_name)
+    else:
+        print("Warning! Cannot find an appropriate linker script for the "
+              "required softdevice!")
 
 freertos_path = join(CORE_DIR, "freertos")
 if(isdir(freertos_path)):
@@ -218,7 +219,7 @@ if(isdir(sysview_path)):
         ]
     )
 
-usb_path = join(CORE_DIR, "Adafruit_TinyUSB_Core")
+usb_path = join(CORE_DIR, "TinyUSB")
 if(isdir(usb_path)):
     if env.subst("$BOARD") != "adafruit_feather_nrf52832":
         env.Append(
@@ -231,7 +232,8 @@ if(isdir(usb_path)):
     env.Append(
         CPPPATH=[
             join(usb_path),
-            join(usb_path, "tinyusb", "src")
+            join(usb_path, "Adafruit_TinyUSB_ArduinoCore"),
+            join(usb_path, "Adafruit_TinyUSB_ArduinoCore", "tinyusb", "src")
         ]
     )
 
