@@ -40,9 +40,9 @@ assert isdir(CORE_DIR)
 NORDIC_DIR = join(CORE_DIR, "nordic")
 assert isdir(NORDIC_DIR)
 
-default_bsp_version = "0.14.5"
+default_bsp_version = "0.18.0"
 default_softdevice_version = "6.1.1"
-default_bootloader_version = "0.2.13"
+default_bootloader_version = "0.3.0"
 
 # Read defaults from build.txt/platform.txt/programmers.txt
 with open(join(FRAMEWORK_DIR, "platform.txt"), "r") as fp:
@@ -171,18 +171,18 @@ if softdevice_name:
                  "%s_nrf52_%s_API" % (softdevice_name, softdevice_version), "include")
         ],
         CPPDEFINES=[
-            "%s" % softdevice_name.upper(),
+            softdevice_name.upper(),
             "NRF52_" + (softdevice_name.upper()),
             "SOFTDEVICE_PRESENT"
         ]
     )
 
     hex_path = join(FRAMEWORK_DIR, "bootloader", board_name)
-
-    for f in listdir(hex_path):
-        if f == "{0}_bootloader-{1}_{2}_{3}.hex".format(
-                variant, bootloader_version, softdevice_name, softdevice_version):
-            env.Append(DFUBOOTHEX=join(hex_path, f))
+    if isdir(hex_path):
+        for f in listdir(hex_path):
+            if f == "{0}_bootloader-{1}_{2}_{3}.hex".format(
+                    variant, bootloader_version, softdevice_name, softdevice_version):
+                env.Append(DFUBOOTHEX=join(hex_path, f))
 
     if "DFUBOOTHEX" not in env:
         print("Warning! Cannot find an appropriate softdevice binary!")
@@ -199,7 +199,7 @@ if softdevice_name:
                   "required softdevice!")
 
 freertos_path = join(CORE_DIR, "freertos")
-if(isdir(freertos_path)):
+if isdir(freertos_path):
     env.Append(
         CPPPATH=[
             join(freertos_path, "Source", "include"),
@@ -210,7 +210,7 @@ if(isdir(freertos_path)):
     )
 
 sysview_path = join(CORE_DIR, "sysview")
-if(isdir(sysview_path)):
+if isdir(sysview_path):
     env.Append(
         CPPPATH=[
             join(sysview_path, "SEGGER"),
@@ -218,8 +218,8 @@ if(isdir(sysview_path)):
         ]
     )
 
-usb_path = join(CORE_DIR, "Adafruit_TinyUSB_Core")
-if(isdir(usb_path)):
+usb_path = join(CORE_DIR, "TinyUSB")
+if isdir(usb_path):
     if env.subst("$BOARD") != "adafruit_feather_nrf52832":
         env.Append(
             CPPDEFINES=[
@@ -230,8 +230,9 @@ if(isdir(usb_path)):
 
     env.Append(
         CPPPATH=[
-            join(usb_path),
-            join(usb_path, "tinyusb", "src")
+            usb_path,
+            join(usb_path, "Adafruit_TinyUSB_ArduinoCore"),
+            join(usb_path, "Adafruit_TinyUSB_ArduinoCore", "tinyusb", "src")
         ]
     )
 
