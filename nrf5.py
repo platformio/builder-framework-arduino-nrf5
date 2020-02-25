@@ -120,6 +120,7 @@ env.Append(
 
 # Process softdevice options
 softdevice_ver = None
+ldscript_path = None
 cpp_defines = env.Flatten(env.get("CPPDEFINES", []))
 if "NRF52_S132" in cpp_defines:
     softdevice_ver = "s132"
@@ -149,22 +150,23 @@ if softdevice_ver:
     if "SOFTDEVICEHEX" not in env:
         print("Warning! Cannot find an appropriate softdevice binary!")
 
-    if not board.get("build.ldscript", ""):
-        # Update linker script:
-        ldscript_dir = join(FRAMEWORK_DIR, "cores",
-                            board.get("build.core"), "SDK",
-                            "components", "softdevice", softdevice_ver,
-                            "toolchain", "armgcc")
-        mcu_family = board.get("build.arduino.ldscript", "").split("_")[1]
-        ldscript_path = ""
-        for f in listdir(ldscript_dir):
-            if f.endswith(mcu_family) and softdevice_ver in f.lower():
-                ldscript_path = join(ldscript_dir, f)
-            if ldscript_path:
-                env.Replace(LDSCRIPT_PATH=ldscript_path)
-            else:
-                print("Warning! Cannot find an appropriate linker script for the "
-                      "required softdevice!")
+    # Update linker script:
+    ldscript_dir = join(FRAMEWORK_DIR, "cores",
+                        board.get("build.core"), "SDK",
+                        "components", "softdevice", softdevice_ver,
+                        "toolchain", "armgcc")
+    mcu_family = board.get("build.arduino.ldscript", "").split("_")[1]
+    for f in listdir(ldscript_dir):
+        if f.endswith(mcu_family) and softdevice_ver in f.lower():
+            ldscript_path = join(ldscript_dir, f)
+
+    if not ldscript_path:
+        print("Warning! Cannot find an appropriate linker script for the "
+              "required softdevice!")
+
+if not board.get("build.ldscript", ""):
+    # if SoftDevice is not specified use default ld script from the framework
+    env.Replace(LDSCRIPT_PATH=ldscript_path or board.get("build.arduino.ldscript", ""))
 
 # Select crystal oscillator as the low frequency source by default
 clock_options = ("USE_LFXO", "USE_LFRC", "USE_LFSYNT")
