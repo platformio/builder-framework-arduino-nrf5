@@ -184,9 +184,6 @@ if softdevice_name:
                     variant, bootloader_version, softdevice_name, softdevice_version):
                 env.Append(DFUBOOTHEX=join(hex_path, f))
 
-    if "DFUBOOTHEX" not in env:
-        print("Warning! Cannot find an appropriate softdevice binary!")
-
     if not board.get("build.ldscript", ""):
         # Update linker script:
         ldscript_dir = join(CORE_DIR, "linker")
