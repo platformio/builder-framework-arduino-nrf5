@@ -217,7 +217,7 @@ if isdir(sysview_path):
 
 usb_path = join(CORE_DIR, "TinyUSB")
 if isdir(usb_path):
-    if env.subst("$BOARD") != "adafruit_feather_nrf52832":
+    if board.get("build.mcu") != "nrf52832":
         env.Append(
             CPPDEFINES=[
                 "USBCON",
