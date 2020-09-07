@@ -105,6 +105,7 @@ env.Append(
 
     CPPPATH=[
         join(CORE_DIR, "cmsis", "include"),
+        join(CORE_DIR, "cmsis", "Core", "Include"),
         join(NORDIC_DIR),
         join(NORDIC_DIR, "nrfx"),
         join(NORDIC_DIR, "nrfx", "hal"),
@@ -168,7 +169,9 @@ if softdevice_name:
     env.Append(
         CPPPATH=[
             join(NORDIC_DIR, "softdevice",
-                 "%s_nrf52_%s_API" % (softdevice_name, softdevice_version), "include")
+                 "%s_nrf52_%s_API" % (softdevice_name, softdevice_version), "include"),
+            join(NORDIC_DIR, "softdevice",
+                 "%s_nrf52_%s_API" % (softdevice_name, softdevice_version), "include", "nrf52")
         ],
         CPPDEFINES=[
             softdevice_name.upper(),
