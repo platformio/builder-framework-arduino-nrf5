@@ -122,7 +122,7 @@ env.Append(
 softdevice_ver = None
 ldscript_path = None
 cpp_defines = env.Flatten(env.get("CPPDEFINES", []))
-if "NRF52_S132" in cpp_defines:
+if "NRF52_S112" in cpp_defines:
     softdevice_ver = "s112"
 elif "NRF51_S130" in cpp_defines:
     softdevice_ver = "s130"
