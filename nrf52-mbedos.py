@@ -19,7 +19,6 @@ control devices attached to a wide range of Arduino boards to create all
 kinds of creative coding, interactive objects, spaces or physical experiences.
 """
 
-from os import listdir
 from os.path import isdir, isfile, join
 
 from SCons.Script import DefaultEnvironment
@@ -80,7 +79,8 @@ env.Append(
     CCFLAGS=[
         "-iprefix" + join(FRAMEWORK_DIR, "cores", board.get("build.core")),
         "@%s" % join(FRAMEWORK_DIR, "variants", board.get(
-            "build.variant"), "includes.txt")
+            "build.variant"), "includes.txt"),
+        "-nostdlib"
     ],
 
     CPPDEFINES=[

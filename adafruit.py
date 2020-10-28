@@ -40,7 +40,7 @@ assert isdir(CORE_DIR)
 NORDIC_DIR = join(CORE_DIR, "nordic")
 assert isdir(NORDIC_DIR)
 
-default_bsp_version = "0.19.0"
+default_bsp_version = "0.21.0"
 default_softdevice_version = "6.1.1"
 default_bootloader_version = "0.3.2"
 
@@ -93,7 +93,6 @@ env.Append(
         ("ARDUINO", 10804),
         "ARDUINO_ARCH_NRF52",
         ("ARDUINO_BSP_VERSION", '\\"%s\\"' % bsp_version),
-        "ARDUINO_FEATHER52",
         "ARDUINO_NRF52_ADAFRUIT",
         "NRF52_SERIES",
         ("LFS_NAME_MAX", 64)
@@ -104,7 +103,7 @@ env.Append(
     ],
 
     CPPPATH=[
-        join(CORE_DIR, "cmsis", "include"),
+        join(CORE_DIR, "cmsis", "Core", "Include"),
         join(NORDIC_DIR),
         join(NORDIC_DIR, "nrfx"),
         join(NORDIC_DIR, "nrfx", "hal"),
@@ -168,7 +167,9 @@ if softdevice_name:
     env.Append(
         CPPPATH=[
             join(NORDIC_DIR, "softdevice",
-                 "%s_nrf52_%s_API" % (softdevice_name, softdevice_version), "include")
+                 "%s_nrf52_%s_API" % (softdevice_name, softdevice_version), "include"),
+            join(NORDIC_DIR, "softdevice",
+                 "%s_nrf52_%s_API" % (softdevice_name, softdevice_version), "include", "nrf52")
         ],
         CPPDEFINES=[
             softdevice_name.upper(),
