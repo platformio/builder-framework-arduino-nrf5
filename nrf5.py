@@ -107,16 +107,23 @@ if "BOARD" in env:
     )
 
 if board.get("build.cpu") == "cortex-m4":
-    env.Append(
-        CCFLAGS=[
-            "-mfloat-abi=softfp",
-            "-mfpu=fpv4-sp-d16"
-        ],
-        LINKFLAGS=[
-            "-mfloat-abi=softfp",
-            "-mfpu=fpv4-sp-d16"
-        ]
-    )
+    if (board.get("build.mcu") in ["nrf52810"]):
+        env.Append(
+            CCFLAGS=[
+                "-mfloat-abi=soft"
+            ]
+        )
+    else:
+        env.Append(
+            CCFLAGS=[
+                "-mfloat-abi=softfp",
+                "-mfpu=fpv4-sp-d16"
+            ],
+            LINKFLAGS=[
+                "-mfloat-abi=softfp",
+                "-mfpu=fpv4-sp-d16"
+            ]
+        )
 
 env.Append(
     ASFLAGS=env.get("CCFLAGS", [])[:]
