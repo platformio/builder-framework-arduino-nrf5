@@ -107,7 +107,7 @@ if "BOARD" in env:
     )
 
 if board.get("build.cpu") == "cortex-m4":
-    if (board.get("build.mcu") in ["nrf52810"]):
+    if (board.get("build.mcu") in ["nrf52810","nrf52805"]):
         env.Append(
             CCFLAGS=[
                 "-mfloat-abi=soft"
