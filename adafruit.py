@@ -253,6 +253,22 @@ env.Append(
     ]
 )
 
+# NRF52840 has a new crypto lib
+crypto_path = join(FRAMEWORK_DIR, "libraries", "Adafruit_nRFCrypto", "src")
+if isdir(crypto_path):
+    if board.get("build.mcu") == "nrf52840":
+        env.Append(
+            CPPPATH=[
+                join(crypto_path),
+            ],
+            LIBPATH=[
+                join(crypto_path, "cortex-m4", "fpv4-sp-d16-hard")
+            ],
+            LIBS=[
+                join("nrf_cc310_0.9.13-no-interrupts")
+            ]
+        )
+
 cpp_flags = env.Flatten(env.get("CPPDEFINES", []))
 
 if "CFG_DEBUG" not in cpp_flags:
