@@ -111,6 +111,10 @@ if board.get("build.cpu") == "cortex-m4":
         CCFLAGS=[
             "-mfloat-abi=softfp",
             "-mfpu=fpv4-sp-d16"
+        ],
+        LINKFLAGS=[
+            "-mfloat-abi=softfp",
+            "-mfpu=fpv4-sp-d16"
         ]
     )
 
