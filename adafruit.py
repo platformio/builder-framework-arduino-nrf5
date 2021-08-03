@@ -34,6 +34,9 @@ variant = board.get("build.variant")
 FRAMEWORK_DIR = platform.get_package_dir("framework-arduinoadafruitnrf52")
 assert isdir(FRAMEWORK_DIR)
 
+CMSIS_DIR = platform.get_package_dir("framework-cmsis")
+assert isdir(CMSIS_DIR)
+
 CORE_DIR = join(FRAMEWORK_DIR, "cores", board.get("build.core"))
 assert isdir(CORE_DIR)
 
@@ -42,7 +45,7 @@ assert isdir(NORDIC_DIR)
 
 default_bsp_version = "0.21.0"
 default_softdevice_version = "6.1.1"
-default_bootloader_version = "0.3.2"
+default_bootloader_version = "0.5.0"
 
 # Read defaults from build.txt/platform.txt/programmers.txt
 with open(join(FRAMEWORK_DIR, "platform.txt"), "r") as fp:
@@ -63,8 +66,6 @@ with open(join(FRAMEWORK_DIR, "boards.txt"), "r") as fp:
 bsp_version = board.get("build.bsp.version", default_bsp_version)
 softdevice_version = board.get("build.softdevice.sd_version", default_softdevice_version)
 bootloader_version = board.get("build.bootloader.version", default_bootloader_version)
-
-# print(bsp_version, softdevice_version, bootloader_version)
 
 env.Append(
     ASFLAGS=["-x", "assembler-with-cpp"],
@@ -95,16 +96,20 @@ env.Append(
         ("ARDUINO_BSP_VERSION", '\\"%s\\"' % bsp_version),
         "ARDUINO_NRF52_ADAFRUIT",
         "NRF52_SERIES",
-        ("LFS_NAME_MAX", 64)
+        ("LFS_NAME_MAX", 64),
+        "DX_CC_TEE"
     ],
 
     LIBPATH=[
-        join(CORE_DIR, "linker")
+        join(CORE_DIR, "linker"),
+        join(CMSIS_DIR, "CMSIS", "DSP", "Lib", "GCC"),
+
     ],
 
     CPPPATH=[
-        join(CORE_DIR, "cmsis", "Core", "Include"),
-        join(NORDIC_DIR),
+        join(CMSIS_DIR, "CMSIS", "Core", "Include"),
+        join(CMSIS_DIR, "CMSIS", "DSP", "Include"),
+        NORDIC_DIR,
         join(NORDIC_DIR, "nrfx"),
         join(NORDIC_DIR, "nrfx", "hal"),
         join(NORDIC_DIR, "nrfx", "mdk"),
@@ -127,7 +132,7 @@ env.Append(
 
     LIBSOURCE_DIRS=[join(FRAMEWORK_DIR, "libraries")],
 
-    LIBS=["m"]
+    LIBS=["m", "arm_cortexM4lf_math"]
 )
 
 if "BOARD" in env:
@@ -155,8 +160,7 @@ if board.get("build.cpu") == "cortex-m4":
     )
 
 env.Append(
-    ASFLAGS=env.get("CCFLAGS", [])[:],
-    CPPDEFINES=["%s" % board.get("build.mcu", "").upper()]
+    ASFLAGS=env.get("CCFLAGS", [])[:]
 )
 
 # Process softdevice options
@@ -172,8 +176,6 @@ if softdevice_name:
                  "%s_nrf52_%s_API" % (softdevice_name, softdevice_version), "include", "nrf52")
         ],
         CPPDEFINES=[
-            softdevice_name.upper(),
-            "NRF52_" + (softdevice_name.upper()),
             "SOFTDEVICE_PRESENT"
         ]
     )
@@ -216,7 +218,7 @@ if isdir(sysview_path):
         ]
     )
 
-usb_path = join(CORE_DIR, "TinyUSB")
+usb_path = join(FRAMEWORK_DIR, "libraries", "Adafruit_TinyUSB_Arduino")
 if isdir(usb_path):
     if board.get("build.mcu") != "nrf52832":
         env.Append(
@@ -226,13 +228,7 @@ if isdir(usb_path):
             ]
         )
 
-    env.Append(
-        CPPPATH=[
-            usb_path,
-            join(usb_path, "Adafruit_TinyUSB_ArduinoCore"),
-            join(usb_path, "Adafruit_TinyUSB_ArduinoCore", "tinyusb", "src")
-        ]
-    )
+    env.Append(CPPPATH=[join(usb_path, "src", "arduino")])
 
 if "build.usb_product" in env.BoardConfig():
     env.Append(
