@@ -127,7 +127,9 @@ env.Append(
         "-Wl,--check-sections",
         "-Wl,--unresolved-symbols=report-all",
         "-Wl,--warn-common",
-        "-Wl,--warn-section-align"
+        "-Wl,--warn-section-align",
+        "-Wl,--wrap=malloc",
+        "-Wl,--wrap=free"
     ],
 
     LIBSOURCE_DIRS=[join(FRAMEWORK_DIR, "libraries")],
