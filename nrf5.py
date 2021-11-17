@@ -184,21 +184,17 @@ if not any(d in clock_options for d in cpp_defines):
 libs = []
 
 if "build.variant" in board:
-    variants_dir = os.path.join(
+    variants_dir = join(
         "$PROJECT_DIR", board.get("build.variants_dir")) if board.get(
-            "build.variants_dir", "") else os.path.join(FRAMEWORK_DIR, "variants")
+            "build.variants_dir", "") else join(FRAMEWORK_DIR, "variants")
     env.Append(
         CPPPATH=[
-            os.path.join(variants_dir, board.get("build.variant"))
-        ],
-
-        LIBPATH=[
-            os.path.join(variants_dir, board.get("build.variant"))
-        ],
+            join(variants_dir, board.get("build.variant"))
+        ]
     )
     libs.append(env.BuildLibrary(
-        os.path.join("$BUILD_DIR", "FrameworkArduinoVariant"),
-        os.path.join(variants_dir, board.get("build.variant"))
+        join("$BUILD_DIR", "FrameworkArduinoVariant"),
+        join(variants_dir, board.get("build.variant"))
     ))
 
 libs.append(
