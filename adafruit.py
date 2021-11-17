@@ -261,15 +261,22 @@ if "CFG_DEBUG" not in cpp_flags:
 libs = []
 
 if "build.variant" in board:
-    env.Append(CPPPATH=[
-        join(FRAMEWORK_DIR, "variants", board.get("build.variant"))
-    ])
+    variants_dir = os.path.join(
+        "$PROJECT_DIR", board.get("build.variants_dir")) if board.get(
+            "build.variants_dir", "") else os.path.join(FRAMEWORK_DIR, "variants")
+    env.Append(
+        CPPPATH=[
+            os.path.join(variants_dir, board.get("build.variant"))
+        ],
 
-    libs.append(
-        env.BuildLibrary(
-            join("$BUILD_DIR", "FrameworkArduinoVariant"),
-            join(FRAMEWORK_DIR, "variants",
-                 board.get("build.variant"))))
+        LIBPATH=[
+            os.path.join(variants_dir, board.get("build.variant"))
+        ],
+    )
+    libs.append(env.BuildLibrary(
+        os.path.join("$BUILD_DIR", "FrameworkArduinoVariant"),
+        os.path.join(variants_dir, board.get("build.variant"))
+    ))
 
 libs.append(
     env.BuildLibrary(
