@@ -32,7 +32,7 @@ FRAMEWORK_DIR = platform.get_package_dir("framework-arduinonordicnrf5")
 assert isdir(FRAMEWORK_DIR)
 
 env.Append(
-    ASFLAGS=["-x", "assembler-with-cpp"],
+    ASPPFLAGS=["-x", "assembler-with-cpp"],
 
     CFLAGS=["-std=gnu11"],
 
@@ -117,10 +117,6 @@ if board.get("build.cpu") == "cortex-m4":
             "-mfpu=fpv4-sp-d16"
         ]
     )
-
-env.Append(
-    ASFLAGS=env.get("CCFLAGS", [])[:]
-)
 
 # Process softdevice options
 softdevice_ver = None

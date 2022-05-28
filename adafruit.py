@@ -67,17 +67,24 @@ bsp_version = board.get("build.bsp.version", default_bsp_version)
 softdevice_version = board.get("build.softdevice.sd_version", default_softdevice_version)
 bootloader_version = board.get("build.bootloader.version", default_bootloader_version)
 
+machine_flags = [
+    "-mthumb",
+    "-mcpu=%s" % board.get("build.cpu"),
+]
+
 env.Append(
-    ASFLAGS=["-x", "assembler-with-cpp"],
+    ASFLAGS=machine_flags,
+    ASPPFLAGS=[
+        "-x", "assembler-with-cpp",
+    ],
 
     CFLAGS=["-std=gnu11"],
 
-    CCFLAGS=[
+    CCFLAGS=machine_flags + [
         "-Ofast",
         "-ffunction-sections",  # place each function in its own section
         "-fdata-sections",
         "-Wall",
-        "-mthumb",
         "-nostdlib",
         "--param", "max-inline-insns-single=500"
     ],
@@ -118,10 +125,9 @@ env.Append(
         join(NORDIC_DIR, "nrfx", "drivers", "src")
     ],
 
-    LINKFLAGS=[
+    LINKFLAGS=machine_flags + [
         "-Ofast",
         "-Wl,--gc-sections,--relax",
-        "-mthumb",
         "--specs=nano.specs",
         "--specs=nosys.specs",
         "-Wl,--check-sections",
@@ -137,18 +143,12 @@ env.Append(
     LIBS=["m", "arm_cortexM4lf_math"]
 )
 
-if "BOARD" in env:
-    env.Append(
-        CCFLAGS=[
-            "-mcpu=%s" % board.get("build.cpu")
-        ],
-        LINKFLAGS=[
-            "-mcpu=%s" % board.get("build.cpu")
-        ]
-    )
-
 if board.get("build.cpu") == "cortex-m4":
     env.Append(
+        ASFLAGS=[
+            "-mfloat-abi=hard",
+            "-mfpu=fpv4-sp-d16",
+        ],
         CCFLAGS=[
             "-mfloat-abi=hard",
             "-mfpu=fpv4-sp-d16",
@@ -160,10 +160,6 @@ if board.get("build.cpu") == "cortex-m4":
             "-u", "_printf_float"
         ]
     )
-
-env.Append(
-    ASFLAGS=env.get("CCFLAGS", [])[:]
-)
 
 # Process softdevice options
 softdevice_name = board.get("build.softdevice.sd_name")
