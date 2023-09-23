@@ -31,7 +31,10 @@ platform = env.PioPlatform()
 board = env.BoardConfig()
 variant = board.get("build.variant")
 
-FRAMEWORK_DIR = platform.get_package_dir("framework-arduinoadafruitnrf52")
+if board.id in ("wiscore_rak4631"):
+   FRAMEWORK_DIR = platform.get_package_dir("framework-arduinoraknrf52")
+else:
+   FRAMEWORK_DIR = platform.get_package_dir("framework-arduinoadafruitnrf52")
 assert isdir(FRAMEWORK_DIR)
 
 CMSIS_DIR = platform.get_package_dir("framework-cmsis")
