@@ -58,8 +58,7 @@ env.Append(
         # For compatibility with sketches designed for AVR@16 MHz (see SPI lib)
         ("F_CPU", "16000000L"),
         "ARDUINO_ARCH_NRF5",
-        "NRF5",
-        "%s" % board.get("build.mcu", "")[0:5].upper()
+        "NRF5"
     ],
 
     LIBPATH=[
@@ -117,6 +116,9 @@ if board.get("build.cpu") == "cortex-m4":
             "-mfpu=fpv4-sp-d16"
         ]
     )
+
+if board.id != "bbcmicrobit_v2":
+    env.Append(CPPDEFINES=[board.get("build.mcu", "")[0:5].upper()])
 
 # Process softdevice options
 softdevice_ver = None
