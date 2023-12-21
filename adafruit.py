@@ -135,7 +135,9 @@ env.Append(
         "-Wl,--warn-common",
         "-Wl,--warn-section-align",
         "-Wl,--wrap=malloc",
-        "-Wl,--wrap=free"
+        "-Wl,--wrap=free",
+        "-Wl,--wrap=realloc",
+        "-Wl,--wrap=calloc"
     ],
 
     LIBSOURCE_DIRS=[join(FRAMEWORK_DIR, "libraries")],
