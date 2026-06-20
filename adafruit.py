@@ -220,7 +220,7 @@ if isdir(sysview_path):
 
 usb_path = join(FRAMEWORK_DIR, "libraries", "Adafruit_TinyUSB_Arduino")
 if isdir(usb_path):
-    if env.subst("$BOARD") != "adafruit_feather_nrf52832":
+    if board.get("build.mcu") != "nrf52832":
         env.Append(
             CPPDEFINES=[
                 "USBCON",
@@ -246,6 +246,22 @@ env.Append(
         join(CORE_DIR)
     ]
 )
+
+# NRF52840 has a new crypto lib
+crypto_path = join(FRAMEWORK_DIR, "libraries", "Adafruit_nRFCrypto", "src")
+if isdir(crypto_path):
+    if board.get("build.mcu") == "nrf52840":
+        env.Append(
+            CPPPATH=[
+                join(crypto_path),
+            ],
+            LIBPATH=[
+                join(crypto_path, "cortex-m4", "fpv4-sp-d16-hard")
+            ],
+            LIBS=[
+                join("nrf_cc310_0.9.13-no-interrupts")
+            ]
+        )
 
 cpp_flags = env.Flatten(env.get("CPPDEFINES", []))
 
